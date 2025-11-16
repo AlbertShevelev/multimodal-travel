@@ -16,9 +16,6 @@ const Parallax = () => {
         <button className='btn_hotels'>
           Гостиницы
         </button>
-        <button className='btn_'>
-          что-то
-        </button>
       </div>
     </div>
   );

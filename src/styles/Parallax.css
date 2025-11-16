@@ -23,13 +23,13 @@ h1 {
 }
 .parallax_btns {
     width: 35%;
-    margin-top: 17.8%;
+    margin-top: 17.5%;
     margin-left: 32.5%;
     display: flex;
     height: 59px;
 }
 .parallax_btns button {
-    width: 33.333%;
+    width: 50%;
     height: 100%;
     margin: 0px;
     font-family: 'Roboto SemiBold';
@@ -46,10 +46,5 @@ h1 {
     color: white;
     border-radius: 0px;
     background-color: #708787;
-}
-.btn_ {
-    border-radius: 0px;
-    color: white;
     border-top-right-radius: 24px;
-    background-color: #708787;
 }
