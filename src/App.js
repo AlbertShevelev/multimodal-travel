@@ -1,24 +1,34 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { useState } from 'react';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import Navbar from './components/Navbar';
+import Parallax from './components/Parallax';
+import SearchForm from './components/SearchForm';
+import RouteResults from './components/RouteResults';
+import BookingForm from './components/BookingForm';
 
 function App() {
+  const [results, setResults] = useState([]);
+
+  const handleSearch = (origin, destination) => {
+    const mockResults = [
+      { origin, destination, duration: 4, price: 1500 },
+      { origin, destination, duration: 3, price: 1200 },
+    ];
+    setResults(mockResults);
+  };
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Router>
+      <div className="App">
+        <Navbar />
+        <Parallax />
+        <Routes>
+          <Route path="/" element={<SearchForm onSearch={handleSearch} />} />
+          <Route path="/search" element={<><SearchForm onSearch={handleSearch} /><RouteResults results={results} /></>} />
+          <Route path="/bookings" element={<BookingForm route={results[0]} />} />
+        </Routes>
+      </div>
+    </Router>
   );
 }
 

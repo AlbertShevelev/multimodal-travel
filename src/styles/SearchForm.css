@@ -1,0 +1,37 @@
+.ticket-search {
+  background-color: #1AC8C8;
+  padding: 40px;
+  color: white;
+  text-align: center;
+}
+
+.ticket-search h2 {
+  margin-bottom: 20px;
+}
+
+.input-container {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+input, select {
+  padding: 10px;
+  margin: 10px 0;
+  border: none;
+  border-radius: 5px;
+}
+
+button {
+  padding: 12px 25px;
+  background-color: #fff;
+  color: #00b8b8;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #f1f1f1;
+}

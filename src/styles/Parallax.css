@@ -1,0 +1,55 @@
+@font-face {
+    font-family: 'Roboto Medium';
+    src:url('../fonts/Roboto/Roboto-Medium.ttf');
+}
+.parallax {
+    height: 845px;
+    width: 100%;
+    display: flow-root;
+    background-image: url('../../public/images/parallax.jpg');
+    align-items: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+}
+h1 {
+    font-family: 'Roboto Medium';
+    font-size: 5rem;
+    color: white;
+    margin-left: 25%;
+}
+.parallax_text {
+    width: 100%;
+    margin-top: 10%;
+}
+.parallax_btns {
+    width: 35%;
+    margin-top: 17.8%;
+    margin-left: 32.5%;
+    display: flex;
+    height: 59px;
+}
+.parallax_btns button {
+    width: 33.333%;
+    height: 100%;
+    margin: 0px;
+    font-family: 'Roboto SemiBold';
+    font-size: 1rem;
+}
+.btn_transport {
+    color: black;
+    border-radius: 0px;
+    border-top-left-radius: 24px;
+    background-color: #1AC8C8;
+}
+.btn_hotels {
+    
+    color: white;
+    border-radius: 0px;
+    background-color: #708787;
+}
+.btn_ {
+    border-radius: 0px;
+    color: white;
+    border-top-right-radius: 24px;
+    background-color: #708787;
+}
