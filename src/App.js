@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Parallax from './components/Parallax';
 import SearchForm from './components/SearchForm';
-import RouteResults from './components/RouteResults';
+import RouteResults from './components/SearchResults';
 import BookingForm from './components/BookingForm';
 
 function App() {
