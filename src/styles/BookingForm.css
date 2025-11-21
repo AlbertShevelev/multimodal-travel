@@ -5,12 +5,6 @@
     flex-direction: column;
 }
 
-input {
-    padding: 0.5rem;
-    margin-top: 0.5rem;
-    width: 100%;
-}
-
 button {
     padding: 0.75rem;
     background-color: #003366;

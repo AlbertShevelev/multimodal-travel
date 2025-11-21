@@ -1,10 +1,14 @@
 .ticket-search {
     background-color: #1AC8C8;
-    padding: 40px;
-    color: white;
+    padding-top: 40px;
+    color: black;
     text-align: center;
 }
 
+.ticket-search-forms {
+  background-color: #1AC8C8;
+  padding-bottom: 40px;
+}
 .ticket-search h2 {
     margin-bottom: 20px;
 }
@@ -17,11 +21,12 @@
 }
 
 .input-field, .select-field {
-    padding: 10px;
-    margin: 10px 0;
     border-radius: 5px;
     border: none;
     font-size: 14px;
+    height: 59px;
+    padding-left: 10px;
+    padding-right: 10px;
 }
 
 .input-field {
@@ -43,23 +48,32 @@
 }
 
 .search-button:hover {
-     background-color: #281a91;
+    background-color: #281a91;
 }
 .error-message {
-  color: red;
-  margin-top: 20px;
+    color: red;
+    margin-top: 20px;
 }
 .results {
-  margin-top: 20px;
+    margin-top: 20px;
 }
 .ticket {
-  background-color: white;
-  padding: 10px;
-  margin: 10px;
-  border-radius: 5px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    background-color: #DAD9D9;
+    padding: 10px;
+    margin: 10px;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 .ticket p {
   margin: 5px 0;
+}
+
+.ticket-search-results {
+  
+    padding-top: 10px;
+    background-color: #DAD9D9;
+    width: 100%;
+    
+    padding-bottom: 10px;
 }

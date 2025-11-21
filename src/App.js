@@ -5,6 +5,7 @@ import Parallax from './components/Parallax';
 import SearchForm from './components/SearchForm';
 import RouteResults from './components/SearchResults';
 import BookingForm from './components/BookingForm';
+import Footer from './components/Footer';
 
 function App() {
   const [results, setResults] = useState([]);
@@ -27,6 +28,7 @@ function App() {
           <Route path="/search" element={<><SearchForm onSearch={handleSearch} /><RouteResults results={results} /></>} />
           <Route path="/bookings" element={<BookingForm route={results[0]} />} />
         </Routes>
+        <Footer />
       </div>
     </Router>
   );

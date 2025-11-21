@@ -11,7 +11,7 @@ const Parallax = () => {
       </div>
       <div className='parallax_btns'>
         <button className='btn_transport'>
-          Транспорт
+          Мультимодальные маршруты
         </button>
         <button className='btn_hotels'>
           Гостиницы

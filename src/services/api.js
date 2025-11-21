@@ -16,3 +16,12 @@ export async function getRoutes() {
   const res = await api.get('/routes');
   return res.data.value || [];
 }
+
+export async function bookTicket(payload) {
+  const res = await fetch("http://localhost:5000/api/book", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  return res.json();
+}

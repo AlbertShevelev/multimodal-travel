@@ -1,0 +1,37 @@
+.ac-wrapper {
+    position: relative;
+    width: 150px;
+    margin-right: 20px;
+    border-radius: 5px;
+    border: none;
+    font-size: 14px;
+}
+
+.ac-input {
+    width: 100%;
+}
+
+.ac-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: white;
+    color: #111827;
+    border-radius: 5px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+    z-index: 50;
+    max-height: 220px;
+    overflow-y: auto;
+    border: 1px solid #e5e7eb;
+}
+
+.ac-item {
+    padding: 8px 10px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.ac-item:hover {
+    background: #f3f4f6;
+}

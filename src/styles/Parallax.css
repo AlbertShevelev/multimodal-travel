@@ -23,7 +23,7 @@ h1 {
 }
 .parallax_btns {
     width: 35%;
-    margin-top: 17.5%;
+    margin-top: 440px;
     margin-left: 32.5%;
     display: flex;
     height: 59px;
@@ -42,7 +42,6 @@ h1 {
     background-color: #1AC8C8;
 }
 .btn_hotels {
-    
     color: white;
     border-radius: 0px;
     background-color: #708787;
