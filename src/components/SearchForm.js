@@ -1,71 +1,92 @@
-import React, { useEffect, useState } from 'react';
-import '../styles/SearchForm.css';
-import { searchFlights } from '../services/api';
+import React, { useEffect, useMemo, useState } from "react";
+import "../styles/SearchForm.css";
+import { searchFlights, fetchCities } from "../services/api";
 import SearchResults from "./SearchResults";
-import AutocompleteInput from "./AutocompleteInput";
-import axios from "axios";
+
+const AutocompleteInput = ({
+  value,
+  onChange,
+  options,
+  placeholder,
+}) => {
+  const [open, setOpen] = useState(false);
+
+  const filtered = useMemo(() => {
+    const q = value.trim().toLowerCase();
+    const arr = q
+      ? options.filter(c => c.toLowerCase().includes(q))
+      : options;
+    return arr.slice(0, 8);
+  }, [value, options]);
+
+  return (
+    <div className="autocomplete">
+      <input
+        className="input-field"
+        type="text"
+        placeholder={placeholder}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        onFocus={() => setOpen(true)}
+        onBlur={() => setTimeout(() => setOpen(false), 150)}
+      />
+
+      {open && filtered.length > 0 && (
+        <ul className="autocomplete-list">
+          {filtered.map((city) => (
+            <li
+              key={city}
+              onMouseDown={() => {
+                onChange(city);
+                setOpen(false);
+              }}
+            >
+              {city}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+};
 
 const SearchForm = () => {
-  const [from, setFrom] = useState('');
-  const [to, setTo] = useState('');
-
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState(''); 
-
-  const [tripType, setTripType] = useState('oneway');
-  const [passengerType, setPassengerType] = useState('adult');
-
   const [cities, setCities] = useState([]);
+  const [citiesError, setCitiesError] = useState("");
 
-  const [outboundResults, setOutboundResults] = useState([]);
-  const [returnResults, setReturnResults] = useState([]); 
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [passengerType, setPassengerType] = useState("adult");
 
+  const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
-  // загрузка городов
   useEffect(() => {
-    const loadCities = async () => {
-      try {
-        const res = await axios.get("http://localhost:5000/api/cities");
-        setCities(res.data.value || []);
-      } catch (e) {
-        console.error("cities load error:", e);
-      }
-    };
-    loadCities();
+      const loadCities = async () => {
+    try {
+      const data = await fetchCities();
+      setCities(Array.isArray(data.value) ? data.value : []);
+    } catch (e) {
+      console.error("Failed to load cities", e);
+      setCities([]);
+    }
+  };
+
+  loadCities();
   }, []);
 
   const handleSearch = async () => {
-    // валидация
-    if (!from || !to || !startDate) {
-      setError("Заполните Откуда, Куда и Дату");
-      return;
-    }
-    if (tripType === 'roundtrip' && !endDate) {
-      setError("Укажите дату обратного билета");
-      return;
-    }
-
     setLoading(true);
-    setError('');
-
+    setError("");
     try {
-      const outboundData = await searchFlights(from, to, startDate);
-      setOutboundResults(outboundData.value || []);
-
-      if (tripType === 'roundtrip') {
-        const returnData = await searchFlights(to, from, endDate);
-        setReturnResults(returnData.value || []);
-      } else {
-        setReturnResults([]);
-      }
-
+      const data = await searchFlights(from, to, startDate, endDate);
+      setResults(data); // data.value или {outbound, return}
     } catch (err) {
       console.error(err);
-      setError('Ошибка при поиске билетов');
-      setOutboundResults([]);
-      setReturnResults([]);
+      setError("Ошибка при поиске билетов");
     } finally {
       setLoading(false);
     }
@@ -73,47 +94,22 @@ const SearchForm = () => {
 
   return (
     <div className="ticket-search">
-      <div className='ticket-search-forms'>
+      <div className="ticket-search-forms">
         <h2>Поиск подходящих билетов</h2>
 
-        
-
         <div className="form-container">
-            <div style={{ display: "flex", gap: 16, backgroundColor: "white", height:"59px", width:"300px", borderRadius:"5px", fontSize:"14px"}}>
-                <label style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                    <input
-                    type="radio"
-                    name="tripType"
-                    value="oneway"
-                    checked={tripType === "oneway"}
-                    onChange={() => setTripType("oneway")}
-                    />
-                    В одну сторону
-                </label>
-
-                <label style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                    <input
-                    type="radio"
-                    name="tripType"
-                    value="roundtrip"
-                    checked={tripType === "roundtrip"}
-                    onChange={() => setTripType("roundtrip")}
-                    />
-                    Туда-обратно
-                </label>
-            </div>
           <AutocompleteInput
             value={from}
             onChange={setFrom}
-            placeholder="Откуда"
             options={cities}
+            placeholder="Откуда"
           />
 
           <AutocompleteInput
             value={to}
             onChange={setTo}
-            placeholder="Куда"
             options={cities}
+            placeholder="Куда"
           />
 
           <input
@@ -123,15 +119,13 @@ const SearchForm = () => {
             onChange={(e) => setStartDate(e.target.value)}
           />
 
-
-          {tripType === 'roundtrip' && (
-            <input
-              className="input-field"
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-            />
-          )}
+          <input
+            className="input-field"
+            type="date"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+            placeholder="Дата обратно"
+          />
 
           <select
             className="select-field"
@@ -146,26 +140,17 @@ const SearchForm = () => {
             Найти билеты
           </button>
         </div>
+
+        {citiesError && <div className="error-message">{citiesError}</div>}
       </div>
 
-      <div className='ticket-search-results'>
+      <div className="ticket-search-results">
         {error && <div className="error-message">{error}</div>}
 
         {loading ? (
           <div className="loading">Загрузка...</div>
         ) : (
-          <>
-
-            <h3 style={{ marginTop: 20 }}>Туда</h3>
-            <SearchResults results={outboundResults} />
-
-            {tripType === "roundtrip" && (
-              <>
-                <h3 style={{ marginTop: 30 }}>Обратно</h3>
-                <SearchResults results={returnResults} />
-              </>
-            )}
-          </>
+          <SearchResults results={results?.value ? results.value : results} />
         )}
       </div>
     </div>

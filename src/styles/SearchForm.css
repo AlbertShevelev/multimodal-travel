@@ -27,6 +27,8 @@
     height: 59px;
     padding-left: 10px;
     padding-right: 10px;
+    padding-top: 0px;
+    padding-bottom: 0px;
 }
 
 .input-field {
@@ -76,4 +78,37 @@
     width: 100%;
     
     padding-bottom: 10px;
+}
+
+.autocomplete {
+  position: relative;
+  width: 150px;
+  margin-right: 20px;
+  height: 59px;
+}
+
+.autocomplete-list {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+  list-style: none;
+  padding: 6px 0;
+  margin: 0;
+  z-index: 50;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.autocomplete-list li {
+  padding: 8px 10px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.autocomplete-list li:hover {
+  background: #eef7f7;
 }

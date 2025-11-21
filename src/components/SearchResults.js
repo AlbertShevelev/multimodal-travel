@@ -1,6 +1,8 @@
 import React, { useMemo, useState } from "react";
 import "../styles/SearchResults.css";
 import { bookTicket } from "../services/api";
+import { bookRoundTrip } from "../services/api";
+
 
 const transportIcons = {
   air: "✈️",
@@ -12,22 +14,101 @@ const transportIcons = {
 
 function normalizeTicket(t) {
   if (!t) return {};
+  const fromStopKey =
+    t.fromStopKey || t.ПунктОтправления_Key || t.fromStop?.Ref_Key;
+
+  const toStopKey =
+    t.toStopKey || t.ПунктНазначения_Key || t.toStop?.Ref_Key;
+
+  const scheduleKey =
+    t.scheduleKey ||
+    t.Рейс_Key ||
+    t.РейсРасписания_Key ||
+    t.Ref_Key;
+
+  const departureDateTime =
+    t.departureDateTime || t.ВремяОтправления || t.DepartureDateTime;
+
+  const arrivalDateTime =
+    t.arrivalDateTime || t.ВремяПрибытия || t.ArrivalDateTime;
+
+  const priceRaw = t.price ?? t.Price ?? t.Тариф;
+  const price = priceRaw == null ? null : Number(priceRaw);
+
   return {
     ...t,
-    routeName: t.routeName || t.routename || t.Рейс || "Рейс",
-    companyName: t.companyName || t.carrierName || "Перевозчик",
-    code: t.code || "",
+
+    fromStopKey,
+    toStopKey,
+    scheduleKey,
+    departureDateTime,
+    arrivalDateTime,
+    price,
+
+    routeName: t.routeName || t.routename || t.Description || "Рейс",
     transport: t.transport || "bus",
-    price: Number(t.price ?? t.Price ?? 0),
-    departureTime: t.departureTime || "",
-    arrivalTime: t.arrivalTime || "",
-    duration: t.duration || "",
+    departureTime: t.departureTime || (departureDateTime ? departureDateTime.slice(11,16) : ""),
+    arrivalTime: t.arrivalTime || (arrivalDateTime ? arrivalDateTime.slice(11,16) : ""),
+    duration: t.duration || t.ВремяВПутиПредставление || "",
     from: t.from || "",
     to: t.to || "",
   };
 }
 
+const SegmentCard = ({ item, selected, onClick, compact = false }) => {
+  return (
+    <div
+      className={`segment-card ${compact ? "compact" : ""} ${
+        selected ? "selected" : ""
+      }`}
+      onClick={onClick}
+    >
+      <div className="seg-left">
+        <div className="seg-icon">
+          {transportIcons[item.transport] || "🚌"}
+        </div>
+        <div className="seg-meta">
+          <div className="seg-company">{item.companyName}</div>
+          <div className="seg-code">
+            {item.transport === "train" ? "Поезд" : "Рейс"} {item.code || ""}
+          </div>
+        </div>
+      </div>
+
+      <div className="seg-middle">
+        <div className="seg-times">
+          <div className="seg-time">
+            {item.departureTime}
+            <div className="seg-city">{item.from}</div>
+          </div>
+
+          <div className="seg-line">
+            <div className="seg-duration">
+              ⏱ {item.duration || "—"}
+            </div>
+            <div className="seg-track" />
+            <div className="seg-badge">Прямой</div>
+          </div>
+
+          <div className="seg-time">
+            {item.arrivalTime}
+            <div className="seg-city">{item.to}</div>
+          </div>
+        </div>
+      </div>
+
+      <div className="seg-right">
+        <div className="seg-price">{item.price} ₽</div>
+        <div className="seg-per">За человека</div>
+        {!compact && <div className="seg-cta">Выбрать</div>}
+      </div>
+    </div>
+  );
+};
+
 const SearchResults = ({ results }) => {
+  const safeResults = Array.isArray(results) ? results : [];
+
   const isRoundTrip =
     results &&
     !Array.isArray(results) &&
@@ -36,12 +117,12 @@ const SearchResults = ({ results }) => {
 
   const outboundList = useMemo(() => {
     const arr = isRoundTrip ? results.outbound : (results || []);
-    return arr.map(normalizeTicket);
+    return (Array.isArray(arr) ? arr : []).map(normalizeTicket);
   }, [results, isRoundTrip]);
 
   const returnList = useMemo(() => {
     if (!isRoundTrip) return [];
-    return results.return.map(normalizeTicket);
+    return (results.return || []).map(normalizeTicket);
   }, [results, isRoundTrip]);
 
   const [selectedOutIdx, setSelectedOutIdx] = useState(0);
@@ -103,6 +184,8 @@ const SearchResults = ({ results }) => {
       alert("Выберите билеты туда и обратно");
       return;
     }
+
+    // проверим обязательные поля, которые ждёт garsService.createBookingOrder
     const check = (ticket, label) => {
       const miss = [];
       if (!ticket.fromStopKey) miss.push("fromStopKey");
@@ -123,6 +206,7 @@ const SearchResults = ({ results }) => {
       alert(e.message);
       return;
     }
+
     const name = prompt("ФИО пассажира:");
     const phone = prompt("Телефон:");
     const email = prompt("Email:");
@@ -141,142 +225,106 @@ const SearchResults = ({ results }) => {
       arrivalDateTime: ticket.arrivalDateTime || null,
       price: ticket.price,
       seatNumber: 1,
-      passenger,
+      // passenger можно НЕ вкладывать — мы шлём отдельно
     });
 
     try {
-      const outRes = await bookTicket(makePayload(selectedOut));
-      if (outRes.error) throw outRes;
-
-      const retRes = await bookTicket(makePayload(selectedRet));
-      if (retRes.error) throw retRes;
+      const res = await bookRoundTrip({
+        outbound: makePayload(selectedOut),
+        inbound: makePayload(selectedRet),
+        passenger, // общий пассажир
+      });
 
       alert(
         `Бронь туда-обратно создана!\n` +
-          `Туда: ${outRes.Ref_Key || "OK"}\n` +
-          `Обратно: ${retRes.Ref_Key || "OK"}`
+        `Туда: ${res.outboundOrder?.Ref_Key || "OK"}\n` +
+        `Обратно: ${res.inboundOrder?.Ref_Key || "OK"}`
       );
     } catch (err) {
       console.error("ROUNDTRIP BOOK ERROR:", err);
-      alert("Ошибка бронирования: " + (err.details?.message?.value || err.details || err.message || ""));
+      alert(
+        "Ошибка бронирования: " +
+        (err.details?.message?.value ||
+          err.details ||
+          err.message ||
+          "")
+      );
     }
   }
+
+
   if (!results || (Array.isArray(results) && results.length === 0)) {
     return <div className="no-results">Нет доступных билетов</div>;
   }
+
   if (isRoundTrip && outboundList.length === 0 && returnList.length === 0) {
     return <div className="no-results">Нет доступных билетов</div>;
   }
+
   return (
     <div className="results-wrapper">
-      {!isRoundTrip && (
+      {/* ONE WAY */}
+      {!isRoundTrip &&
         outboundList.map((item, idx) => (
           <div key={idx} className="ticket-card">
-            <div className="left-block">
-              <div className="airline-icon">
-                {transportIcons[item.transport] || "🚌"}
-              </div>
-              <div>
-                <div className="airline-name">{item.companyName}</div>
-                <div className="flight-number">
-                  {item.transport === "train" ? "Поезд" : "Рейс"} {item.code}
-                </div>
-              </div>
-            </div>
-
-            <div className="middle-block">
-              <div className="time-row">
-                <div className="time">{item.departureTime}</div>
-                <div className="time">{item.arrivalTime}</div>
-              </div>
-              <div className="city-row">
-                <div className="city">{item.from}</div>
-                <div className="city">{item.to}</div>
-              </div>
-              <div className="duration-row">
-                <span>⏱ {item.duration}</span>
-                <span className="direct">Прямой</span>
-              </div>
-            </div>
-
-            <div className="right-block">
-              <div className="price">{item.price} ₽</div>
-              <div className="per-person">За человека</div>
-              <button className="choose-btn" onClick={() => handleBookOneWay(item)}>
-                Выбрать
-              </button>
-            </div>
+            <SegmentCard item={item} />
+            <button
+              className="choose-btn big"
+              onClick={() => handleBookOneWay(item)}
+            >
+              Выбрать билет
+            </button>
           </div>
-        ))
-      )}
+        ))}
+
+      {/* ROUND TRIP */}
       {isRoundTrip && (
-        <div className="ticket-card roundtrip-card">
-          <div className="roundtrip-sections">
-            <div className="roundtrip-section">
-              <div className="section-title">Туда</div>
-              <div className="section-list">
-                {outboundList.map((item, idx) => (
-                  <div
-                    key={idx}
-                    className={`segment-row ${idx === selectedOutIdx ? "selected" : ""}`}
-                    onClick={() => setSelectedOutIdx(idx)}
-                  >
-                    <div className="segment-left">
-                      <div className="segment-icon">
-                        {transportIcons[item.transport] || "🚌"}
-                      </div>
-                      <div className="segment-main">
-                        <div className="segment-route">{item.routeName}</div>
-                        <div className="segment-times">
-                          {item.departureTime} — {item.arrivalTime}
-                        </div>
-                        <div className="segment-duration">{item.duration}</div>
-                      </div>
-                    </div>
-                    <div className="segment-price">{item.price} ₽</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="roundtrip-section">
-              <div className="section-title">Обратно</div>
-              <div className="section-list">
-                {returnList.length === 0 ? (
-                  <div className="no-returns">Обратных рейсов нет</div>
-                ) : (
-                  returnList.map((item, idx) => (
-                    <div
-                      key={idx}
-                      className={`segment-row ${idx === selectedRetIdx ? "selected" : ""}`}
-                      onClick={() => setSelectedRetIdx(idx)}
-                    >
-                      <div className="segment-left">
-                        <div className="segment-icon">
-                          {transportIcons[item.transport] || "🚌"}
-                        </div>
-                        <div className="segment-main">
-                          <div className="segment-route">{item.routeName}</div>
-                          <div className="segment-times">
-                            {item.departureTime} — {item.arrivalTime}
-                          </div>
-                          <div className="segment-duration">{item.duration}</div>
-                        </div>
-                      </div>
-                      <div className="segment-price">{item.price} ₽</div>
-                    </div>
-                  ))
-                )}
-              </div>
+        <div className="ticket-card roundtrip-card nice">
+          <div className="rt-block">
+            <div className="rt-title">Туда</div>
+            <div className="rt-list">
+              {outboundList.map((item, idx) => (
+                <SegmentCard
+                  key={idx}
+                  item={item}
+                  compact
+                  selected={idx === selectedOutIdx}
+                  onClick={() => setSelectedOutIdx(idx)}
+                />
+              ))}
             </div>
           </div>
-          <div className="roundtrip-total">
-            <div className="total-price">
-              Итого: <b>{totalPrice} ₽</b>
+
+          <div className="rt-divider" />
+
+          <div className="rt-block">
+            <div className="rt-title">Обратно</div>
+            <div className="rt-list">
+              {returnList.length === 0 ? (
+                <div className="no-returns">Обратных рейсов нет</div>
+              ) : (
+                returnList.map((item, idx) => (
+                  <SegmentCard
+                    key={idx}
+                    item={item}
+                    compact
+                    selected={idx === selectedRetIdx}
+                    onClick={() => setSelectedRetIdx(idx)}
+                  />
+                ))
+              )}
+            </div>
+          </div>
+
+          <div className="roundtrip-total nice">
+            <div>
+              <div className="total-label">Итого</div>
+              <div className="total-price">{totalPrice} ₽</div>
               <div className="per-person">За человека</div>
             </div>
 
             <button
-              className="choose-btn"
+              className="choose-btn big"
               onClick={handleBookRoundTrip}
               disabled={!selectedOut || !selectedRet}
             >

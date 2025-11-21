@@ -1,62 +1,58 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useMemo, useState } from "react";
 import "../styles/AutocompleteInput.css";
 
-const AutocompleteInput = ({ value, onChange, placeholder, options }) => {
+const AutocompleteInput = ({
+  value,
+  onChange,
+  suggestions = [],
+  placeholder = "",
+  maxItems = 8,
+}) => {
   const [open, setOpen] = useState(false);
-  const [query, setQuery] = useState(value || "");
-  const wrapperRef = useRef(null);
-
-  useEffect(() => setQuery(value || ""), [value]);
-
-  useEffect(() => {
-    const onDocClick = (e) => {
-      if (!wrapperRef.current?.contains(e.target)) setOpen(false);
-    };
-    document.addEventListener("mousedown", onDocClick);
-    return () => document.removeEventListener("mousedown", onDocClick);
-  }, []);
 
   const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return options.slice(0, 8);
-    return options
-      .filter((opt) => opt.toLowerCase().includes(q))
-      .slice(0, 8);
-  }, [options, query]);
+    const q = value.trim().toLowerCase();
+    if (!q) return suggestions.slice(0, maxItems);
+    return suggestions
+      .filter((s) => s.toLowerCase().includes(q))
+      .slice(0, maxItems);
+  }, [value, suggestions, maxItems]);
 
-  const handleSelect = (opt) => {
-    onChange(opt);
-    setQuery(opt);
+  const handleSelect = (city) => {
+    onChange(city);
     setOpen(false);
   };
 
   return (
-    <div className="ac-wrapper" ref={wrapperRef}>
+    <div className="ac-wrapper">
       <input
-        className="input-field ac-input"
+        className="ac-input"
         type="text"
         placeholder={placeholder}
-        value={query}
-        onFocus={() => setOpen(true)}
+        value={value}
         onChange={(e) => {
-          setQuery(e.target.value);
           onChange(e.target.value);
           setOpen(true);
         }}
+        onFocus={() => setOpen(true)}
+        onBlur={() => {
+          setTimeout(() => setOpen(false), 150);
+        }}
+        autoComplete="off"
       />
 
       {open && filtered.length > 0 && (
-        <div className="ac-dropdown">
-          {filtered.map((opt) => (
-            <div
-              key={opt}
+        <ul className="ac-list">
+          {filtered.map((city, idx) => (
+            <li
+              key={idx}
               className="ac-item"
-              onClick={() => handleSelect(opt)}
+              onMouseDown={() => handleSelect(city)}
             >
-              {opt}
-            </div>
+              {city}
+            </li>
           ))}
-        </div>
+        </ul>
       )}
     </div>
   );
