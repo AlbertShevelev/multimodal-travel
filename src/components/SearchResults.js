@@ -12,6 +12,7 @@ const transportIcons = {
   taxi: "🚕",
 };
 
+//sdgregre
 function normalizeTicket(t) {
   if (!t) return {};
   const fromStopKey =
@@ -185,7 +186,6 @@ const SearchResults = ({ results }) => {
       return;
     }
 
-    // проверим обязательные поля, которые ждёт garsService.createBookingOrder
     const check = (ticket, label) => {
       const miss = [];
       if (!ticket.fromStopKey) miss.push("fromStopKey");
@@ -225,14 +225,13 @@ const SearchResults = ({ results }) => {
       arrivalDateTime: ticket.arrivalDateTime || null,
       price: ticket.price,
       seatNumber: 1,
-      // passenger можно НЕ вкладывать — мы шлём отдельно
     });
 
     try {
       const res = await bookRoundTrip({
         outbound: makePayload(selectedOut),
         inbound: makePayload(selectedRet),
-        passenger, // общий пассажир
+        passenger,
       });
 
       alert(
