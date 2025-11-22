@@ -2,7 +2,7 @@ import React, { useMemo, useState } from "react";
 import "../styles/SearchResults.css";
 import { bookTicket } from "../services/api";
 import { bookRoundTrip } from "../services/api";
-
+import BookingModal from "./BookingModal";
 
 const transportIcons = {
   air: "✈️",
@@ -109,6 +109,8 @@ const SegmentCard = ({ item, selected, onClick, compact = false }) => {
 
 const SearchResults = ({ results }) => {
   const safeResults = Array.isArray(results) ? results : [];
+  const [isBookingModalOpen, setBookingModalOpen] = useState(false);
+  const [pendingRoundTrip, setPendingRoundTrip] = useState(null);
 
   const isRoundTrip =
     results &&
@@ -324,7 +326,14 @@ const SearchResults = ({ results }) => {
 
             <button
               className="choose-btn big"
-              onClick={handleBookRoundTrip}
+              onClick={() => {
+                if (!selectedOut || !selectedRet) {
+                  alert("Выберите оба направления!");
+                  return;
+                }
+                setPendingRoundTrip({ outbound: selectedOut, inbound: selectedRet });
+                setBookingModalOpen(true);
+              }}
               disabled={!selectedOut || !selectedRet}
             >
               Выбрать билет
@@ -332,6 +341,26 @@ const SearchResults = ({ results }) => {
           </div>
         </div>
       )}
+      <BookingModal
+        isOpen={isBookingModalOpen}
+        onClose={() => setBookingModalOpen(false)}
+        onConfirm={async (passenger) => {
+          try {
+            await bookRoundTrip({
+              outbound: pendingRoundTrip.outbound,
+              inbound: pendingRoundTrip.inbound,
+              passenger,
+            });
+            alert("Бронирование успешно!");
+          } catch (err) {
+            console.error("ROUNDTRIP BOOK ERROR:", err);
+            alert("Ошибка бронирования: " + err.message);
+          } finally {
+            setBookingModalOpen(false);
+          }
+        }}
+      />
+
     </div>
   );
 };
